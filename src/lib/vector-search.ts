@@ -9,6 +9,7 @@ export type SemanticHit = {
   location: string;
   similarity: string;
   match_score: string | null;
+  hybrid_score: string;
 };
 
 /**
@@ -17,6 +18,7 @@ export type SemanticHit = {
  *  2. metadata filters (status, employment type, location) are applied in the WHERE clause
  *  3. open jobs are ranked by cosine distance (<=>), served by the HNSW index, top k returned
  *  4. the student's skill-based match score is joined in, so meaning and skills are shown side by side
+ *  5. optional hybrid ranking: 0.6 x skill match (0-1) + 0.4 x semantic similarity
  */
 export async function semanticJobSearch(opts: {
   text: string;
@@ -24,12 +26,15 @@ export async function semanticJobSearch(opts: {
   type?: string;
   location?: string;
   k?: number;
+  rank?: 'meaning' | 'hybrid';
 }): Promise<SemanticHit[]> {
   const vec = toVector(await embed(opts.text));
   return query<SemanticHit>(
     `SELECT j.job_id, j.title, c.name AS company, j.employment_type, j.location,
             ROUND((1 - (j.description_embedding <=> $1::vector))::numeric, 3) AS similarity,
-            sga.match_score
+            sga.match_score,
+            ROUND(0.6 * COALESCE(sga.match_score, 0) / 100
+                + 0.4 * (1 - (j.description_embedding <=> $1::vector))::numeric, 3) AS hybrid_score
      FROM job_postings j
      JOIN companies c ON c.company_id = j.company_id
      LEFT JOIN skill_gap_analysis sga ON sga.job_id = j.job_id AND sga.resume_id = $2
@@ -37,9 +42,12 @@ export async function semanticJobSearch(opts: {
        AND j.description_embedding IS NOT NULL
        AND ($3 = '' OR j.employment_type = $3)
        AND ($4 = '' OR j.location = $4)
-     ORDER BY j.description_embedding <=> $1::vector
+     ORDER BY CASE WHEN $6 = 'hybrid'
+                   THEN -(0.6 * COALESCE(sga.match_score, 0) / 100
+                        + 0.4 * (1 - (j.description_embedding <=> $1::vector)))
+                   ELSE (j.description_embedding <=> $1::vector) END
      LIMIT $5`,
-    [vec, opts.resumeId, opts.type ?? '', opts.location ?? '', opts.k ?? 5],
+    [vec, opts.resumeId, opts.type ?? '', opts.location ?? '', opts.k ?? 5, opts.rank ?? 'meaning'],
   );
 }
 
