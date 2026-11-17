@@ -10,7 +10,7 @@ DBMS Level 3 Project (UE24CS351A) – Option 2: **SQL + vector database** (Postg
 | Member | SRN | Responsibilities |
 | --- | --- | --- |
 | Himansh Ahuja | PES2UG24CS923 | Relational database design (ER, schema, DDL), PL/pgSQL functions, procedure and triggers, sample data and SQL queries, resume-upload API, student pages, authentication and security |
-| Abhishek Kumar Singh | PES2UG24CS026 | Vector database (pgvector columns, HNSW indexes, embedding pipeline, vector queries), semantic job search page, admin analytics page, testing (database and application test cases), documentation |
+| Abhishek Kumar Singh | PES2UG24CS026 | Vector database (pgvector columns, HNSW indexes, embedding pipeline, vector queries), semantic job search with hybrid ranking, admin job management (procedure, trigger, view, pages), admin analytics, testing, documentation |
 
 ## Tech stack
 
@@ -49,7 +49,9 @@ Passwords are stored as bcrypt hashes; sessions use an HMAC-signed, http-only co
 - **Student:** dashboard (skill matches + semantic matches + skills to learn), resume upload (PDF → skills →
   embedding → `CALL sp_analyze_resume`), job board with full-text search, semantic job search with filters,
   job detail with skill-by-skill gap, application tracker.
-- **Admin:** analytics on most commonly missing skills, match quality per company, application pipeline.
+- **Admin:** analytics on most commonly missing skills, match quality per company, application pipeline;
+  job management – create jobs with required skills (one transaction + embedding + `CALL sp_analyze_job`),
+  add companies, close/reopen (trigger recomputes gaps) and delete jobs (cascade).
 
 ## Database files
 
@@ -61,10 +63,11 @@ Passwords are stored as bcrypt hashes; sessions use an HMAC-signed, http-only co
 | `db/04_queries.sql` | GROUP BY/HAVING, UPDATE, DELETE, correlated and nested queries |
 | `db/05_vector.sql` | pgvector commands: operators, semantic search, hybrid ranking, EXPLAIN |
 | `db/06_tests.sql` | Database test cases (constraints, triggers, transaction, cascade) |
+| `db/07_job_admin.sql` | `sp_analyze_job` procedure, `trg_jobs_reopened` trigger, `v_job_admin_overview` view |
 
 ## Testing
 
-11 database tests and 9 application tests, all passing – see [docs/TESTING.md](docs/TESTING.md).
+11 database tests, 9 application tests and 8 admin tests, all passing – see [docs/TESTING.md](docs/TESTING.md).
 
 ## Demo flow
 
@@ -72,6 +75,6 @@ Passwords are stored as bcrypt hashes; sessions use an HMAC-signed, http-only co
 2. Semantic search: "web backend developer who writes Python APIs" → Backend Developer ranks first.
 3. Applications → change a status (a trigger updates `last_updated`).
 4. Sign in as Sneha → Upload `public/sample-resume.pdf` → Java Developer match goes from 67% to 100%.
-5. Sign in as admin → Analytics.
+5. Sign in as admin → Analytics → Manage jobs → New job (it is scored against every student immediately).
 
 Reset the demo data at any time with `npm run db:init` followed by `npm run embed`.

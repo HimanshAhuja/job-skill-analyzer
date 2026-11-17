@@ -89,3 +89,10 @@ tr:last-child td { border-bottom: 0; }
 .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .filters input[name=q] { width: 340px; }
 .sim { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--navy); }
+.notice { background: #e2f4ea; color: #17643f; padding: 10px 14px; border-radius: 8px; }
+textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; width: 100%; resize: vertical; }
+.row.wrap { flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.row.wrap .field input, .row.wrap .field select { width: 170px; }
+.skill-picker td { padding: 6px 8px; }
+.skill-picker select { padding: 4px 6px; font-size: 13px; }
+.st.closed { background: #fde8e6; color: #9b2c24; } .st.draft { background: #eef1f5; }

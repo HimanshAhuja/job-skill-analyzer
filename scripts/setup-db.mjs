@@ -11,7 +11,7 @@ db.on('notice', (n) => console.log('  NOTICE:', n.message));
 // start from a clean schema so the script can be re-run any time
 await db.query('DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;');
 
-for (const file of ['01_ddl.sql', '02_plpgsql.sql', '03_dml.sql']) {
+for (const file of ['01_ddl.sql', '02_plpgsql.sql', '03_dml.sql', '07_job_admin.sql']) {
   let sql = await readFile(new URL(`../db/${file}`, import.meta.url), 'utf8');
   if (file === '01_ddl.sql') {
     // the first lines (DROP/CREATE DATABASE, \c) are for psql only

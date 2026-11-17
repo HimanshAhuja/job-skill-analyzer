@@ -21,7 +21,10 @@ export default async function Nav() {
                 <Link href="/applications">Applications</Link>
               </>
             ) : (
-              <Link href="/admin/analytics">Analytics</Link>
+              <>
+                <Link href="/admin/analytics">Analytics</Link>
+                <Link href="/admin/jobs">Manage jobs</Link>
+              </>
             )}
             <span className="who">
               {user.full_name} <em>{user.role}</em>
