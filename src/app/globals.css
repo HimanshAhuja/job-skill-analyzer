@@ -83,3 +83,9 @@ tr:last-child td { border-bottom: 0; }
 .ticks { padding-left: 20px; line-height: 2; color: #3d4652; }
 .signin select { width: 100%; }
 .empty { text-align: center; padding: 48px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.field input { width: 100%; color: var(--ink); }
+.demo-note { margin: 14px 0 0; line-height: 1.5; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters input[name=q] { width: 340px; }
+.sim { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--navy); }

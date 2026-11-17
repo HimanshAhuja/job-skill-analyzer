@@ -1,12 +1,13 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { query } from './db';
+import { verifySessionToken } from './auth';
 
 export type User = { user_id: number; full_name: string; email: string; role: 'student' | 'admin' };
 
-/** Demo session: the signed-in user's id is kept in an http-only cookie. */
+/** The signed-in user, read from the signed session cookie (null if absent, tampered or expired). */
 export async function currentUser(): Promise<User | null> {
-  const id = Number((await cookies()).get('uid')?.value);
+  const id = verifySessionToken((await cookies()).get('session')?.value);
   if (!id) return null;
   const [u] = await query<User>(
     'SELECT user_id, full_name, email, role FROM users WHERE user_id = $1 AND is_active',
@@ -15,6 +16,7 @@ export async function currentUser(): Promise<User | null> {
   return u ?? null;
 }
 
+/** Role-based access: redirects to sign-in, or to the user's own home if the role does not match. */
 export async function requireUser(role?: User['role']): Promise<User> {
   const u = await currentUser();
   if (!u) redirect('/');

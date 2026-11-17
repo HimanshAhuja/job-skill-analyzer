@@ -1,17 +1,12 @@
 import { redirect } from 'next/navigation';
-import { query } from '@/lib/db';
 import { currentUser } from '@/lib/session';
-import { signIn } from './actions';
+import LoginForm from '@/components/LoginForm';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const user = await currentUser();
   if (user) redirect(user.role === 'admin' ? '/admin/analytics' : '/dashboard');
-
-  const users = await query<{ user_id: number; full_name: string; email: string; role: string }>(
-    'SELECT user_id, full_name, email, role FROM users WHERE is_active ORDER BY role DESC, user_id',
-  );
 
   return (
     <div className="hero">
@@ -29,17 +24,11 @@ export default async function Home() {
       </div>
       <div className="card signin">
         <h2>Sign in</h2>
-        <p className="muted small">Demo accounts from the seed data</p>
-        <form action={signIn} className="stack">
-          <select name="user_id" defaultValue={users.find((u) => u.role === 'student')?.user_id}>
-            {users.map((u) => (
-              <option key={u.user_id} value={u.user_id}>
-                {u.full_name} ({u.role}) – {u.email}
-              </option>
-            ))}
-          </select>
-          <button className="btn">Continue</button>
-        </form>
+        <LoginForm />
+        <p className="muted small demo-note">
+          Demo accounts (password <code>demo123</code>): aarav.sharma@example.com, sneha.iyer@example.com
+          (students) · admin@jobskill.example (admin)
+        </p>
       </div>
     </div>
   );

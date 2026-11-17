@@ -23,18 +23,21 @@ Start the app and reset the data 10 minutes before presenting, so every number o
 
 1. **Introduction (home page)**
    - Say: "Students upload a resume, and our system compares it with every stored job posting. For each job it computes a skill gap, recommends jobs and skills to learn, tracks applications, and shows analytics on the most commonly missing skills. Everything runs on PostgreSQL with the pgvector extension, and the web app is built with Next.js."
-2. **Student dashboard** – sign in as Aarav Sharma.
+2. **Login and student dashboard** – sign in as `aarav.sharma@example.com` / `demo123`.
+   - Say: "Passwords are stored only as bcrypt hashes, and the session cookie is HMAC-signed, so it cannot be edited to become another user. Students and admins see different pages."
    - Say: "The left table is the skill match, computed inside the database by our PL/pgSQL function: required skills count double, and a skill only counts if the level is high enough. The right table ranks jobs by meaning, using AI embeddings stored in pgvector and cosine distance. At the bottom are the skills to learn next."
 3. **Job board and search** – click Jobs, search "python".
    - Say: "The list is sorted by match score. Search uses PostgreSQL full-text search on a GIN index."
+   - Then open **Semantic search**, type "web backend developer who writes Python APIs", click Search.
+   - Say: "This embeds the text with the same model as the job descriptions and ranks open jobs by cosine distance in pgvector. Backend Developer comes first even though I never typed Django or PostgreSQL. The filters are applied in the same SQL query."
 4. **Job detail and apply** – open Data Analyst Intern, click Apply.
    - Say: "This is the gap skill by skill. Applying inserts a row into applications; a BEFORE INSERT trigger first checks that the job is still open."
 5. **Application tracker** – change a status, click Save.
    - Say: "Last updated is never set by the app. A BEFORE UPDATE trigger sets it on every change."
-6. **Resume upload** – sign in as Sneha Iyer, note Java Developer at 67%, upload `public/sample-resume.pdf`.
+6. **Resume upload** – sign in as `sneha.iyer@example.com` / `demo123`, note Java Developer at 67%, upload `public/sample-resume.pdf`.
    - Say: "The PDF is parsed, 8 skills are found with their levels, the resume is saved in one transaction, its embedding is stored in pgvector, and the stored procedure sp_analyze_resume re-analyses every open job. A trigger archives her older resume."
    - Open the dashboard: Java Developer is now 100%.
-7. **Placement-cell analytics** – sign in as Placement Admin.
+7. **Placement-cell analytics** – sign in as `admin@jobskill.example` / `demo123`.
    - Say: "The bar chart comes from the view v_top_missing_skills: Docker tops the list, so that is the training to run. Next to it are the average match per company and the application pipeline, from GROUP BY queries."
 8. **Close**
    - Say: "The database does the real work: 11 normalised tables, constraints, a stored procedure, functions, 4 triggers, views and vector search, with a Next.js front end on top."
@@ -70,10 +73,11 @@ Next.js 15 (App Router), React 19 and TypeScript. Every folder under `src/app` i
 
 | Page (URL) | Who | What it shows | File |
 | --- | --- | --- | --- |
-| Sign in ( / ) | Everyone | Demo account picker; user id in a cookie | `src/app/page.tsx` |
+| Sign in ( / ) | Everyone | Email + password (bcrypt); signed session cookie | `src/app/page.tsx` |
 | Dashboard ( /dashboard ) | Student | Tiles, skill matches, semantic matches, skills to learn | `src/app/dashboard/page.tsx` |
 | Upload resume ( /resume ) | Student | PDF upload and the skills found | `src/app/resume/page.tsx` |
 | Jobs ( /jobs ) | Student | Open jobs, full-text search, match score | `src/app/jobs/page.tsx` |
+| Semantic search ( /search ) | Student | Search by meaning with type/location filters | `src/app/search/page.tsx` |
 | Job detail ( /jobs/[id] ) | Student | Skill-by-skill gap, recommendations, Apply | `src/app/jobs/[id]/page.tsx` |
 | Applications ( /applications ) | Student | Status tracker, Save, Delete | `src/app/applications/page.tsx` |
 | Analytics ( /admin/analytics ) | Admin | Missing skills, match per company, pipeline | `src/app/admin/analytics/page.tsx` |
@@ -85,7 +89,7 @@ The backend runs inside the same Next.js server. It uses one node-postgres (`pg`
 | Mechanism | Used for | File |
 | --- | --- | --- |
 | Server components | SELECTs while rendering pages | `src/app/*/page.tsx` |
-| Server actions | Sign in, apply, update status, delete | `src/app/actions.ts` |
+| Server actions | Sign in (bcrypt check), apply, update status, delete | `src/app/actions.ts` |
 | Route handler | `POST /api/resume` – resume upload | `src/app/api/resume/route.ts` |
 
 **Resume upload, step by step**
@@ -133,6 +137,8 @@ The backend runs inside the same Next.js server. It uses one node-postgres (`pg`
 - **Function vs procedure?** `fn_compute_skill_gap` returns the analysis id for one resume and one job; `sp_analyze_resume` returns nothing, loops over all open jobs and is run with CALL.
 - **Correlated query?** Best student per job: the inner MAX(match_score) is re-evaluated for each outer row's job_id (report Section 4.4).
 - **SQL injection?** Every query is parameterised (`$1, $2`).
+- **How is login secured?** Passwords are bcrypt hashes; the session cookie is http-only and HMAC-signed with SESSION_SECRET from `.env`, so editing it logs you out (test A04).
+- **How did you test it?** 11 database tests (`db/06_tests.sql`) and 9 application tests, all passing (`docs/TESTING.md`).
 - **Where does the AI model run?** On our own server via Transformers.js and ONNX Runtime; no resume text leaves the machine.
 
 ## If something breaks during the demo
@@ -142,6 +148,8 @@ The backend runs inside the same Next.js server. It uses one node-postgres (`pg`
 | "relation users does not exist" | Tab 2: Ctrl+C, `npm run db:init`, `npm run embed`, `npm run dev` |
 | Page won't load | Tab 2 stopped: `npm run dev` |
 | ECONNREFUSED 127.0.0.1:5432 | Tab 1 stopped: `npm run db:start`, then refresh |
+| Login says "Incorrect email or password" for demo123 | Old data: `npm run db:init` + `npm run embed` |
+| "Set SESSION_SECRET" error | Add `SESSION_SECRET=` plus any long random text to `.env` |
 | "No embeddings yet" | Tab 2: Ctrl+C, `npm run embed`, `npm run dev` |
 | Sneha already at 100% before upload | Reset: `npm run db:init` + `npm run embed` |
 | "embedding not available" on upload | No internet on first model load; skill scores still update |

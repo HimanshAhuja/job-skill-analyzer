@@ -1,9 +1,15 @@
+-- Passwords are stored only as bcrypt hashes (demo password for all accounts: demo123)
 INSERT INTO users (email, password_hash, full_name, role) VALUES
-('admin@jobskill.example',  '$2b$12$hK3s9QeYv1aZ0pXcR7mW8O', 'Placement Admin', 'admin'),
-('aarav.sharma@example.com','$2b$12$Lw2pT8nB4cV6xZ1qY3rU5e', 'Aarav Sharma',    'student'),
-('diya.menon@example.com',  '$2b$12$Pq7mN2bV5cX8zL1kJ4hG6f', 'Diya Menon',      'student'),
-('rohan.k@example.com',     '$2b$12$Rt5yU8iO2pA4sD6fG9hJ1k', 'Rohan Kulkarni',  'student'),
-('sneha.iyer@example.com',  '$2b$12$Zx3cV6bN9mQ2wE5rT8yU1i', 'Sneha Iyer',      'student');
+('admin@jobskill.example',
+ '$2a$10$EsZcgk4zTBLOebizx8/Yge9wvjQSLyml0GstBjv6bZ0rHDMyVnmti', 'Placement Admin', 'admin'),
+('aarav.sharma@example.com',
+ '$2a$10$n9X.ICYG/Qe.DcGJ7cve7eJvv46COrDMPFhWgTLjvGy4SSH1h5ppC', 'Aarav Sharma', 'student'),
+('diya.menon@example.com',
+ '$2a$10$sNJzZuYs4mUdM0hj2devt.0azfmttTtv.qxny1qPy66m.mU7amozS', 'Diya Menon', 'student'),
+('rohan.k@example.com',
+ '$2a$10$l4O9E3yDVNfQAYJXE.JhaeGViqcMkufO2VcxdOlxVEzxPc0l7tpBG', 'Rohan Kulkarni', 'student'),
+('sneha.iyer@example.com',
+ '$2a$10$GFcaSeQ.Njd37pNHN08qXuFSGAKtKanqq6JGejlZghT6WG1cJRIti', 'Sneha Iyer', 'student');
 SELECT user_id, email, full_name, role, is_active FROM users;
 INSERT INTO student_profiles
        (user_id, phone, location, education_level, years_experience, linkedin_url) VALUES
