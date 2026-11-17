@@ -17,6 +17,7 @@ export default async function Nav() {
                 <Link href="/dashboard">Dashboard</Link>
                 <Link href="/resume">Upload resume</Link>
                 <Link href="/jobs">Jobs</Link>
+                <Link href="/search">Semantic search</Link>
                 <Link href="/applications">Applications</Link>
               </>
             ) : (
